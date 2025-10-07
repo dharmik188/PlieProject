@@ -1,171 +1,341 @@
-import { StyleSheet, Text, View, Image, Dimensions, StatusBar, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView } from 'react-native'
-import React from 'react'
-import { useNavigation } from '@react-navigation/native'
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet,
+    Dimensions,
+    Platform,
+    ScrollView,
+    SafeAreaView,
+    Image, // Use SafeAreaView for better layout on notched devices
+} from 'react-native';
+import Google from '../assets/Images/Google.png';
+import Facebook from '../assets/Images/Facebook.png';
+import Apple from '../assets/Images/Apple.png';
+import Icon from 'react-native-vector-icons/FontAwesome'; // You'd need to install react-native-vector-icons
+import axios from 'axios';
+// import { setUsername, setPassword } from '../Redux/Slices/logSlice';
+// import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { login, logout } from '../Redux/Slices/logSlice';
 
-const deviceHeight = Dimensions.get( 'window' ).height;
-const deviceWidth = Dimensions.get( 'window' ).width;
+const { height } = Dimensions.get('window');
 
-const LoginScreen = ({navigation = useNavigation()}) => {
-  return (
-    <View style={styles.container}>
-        <StatusBar backgroundColor='white' barStyle='dark-content'/>
-        <ScrollView style={{flex:1,}}>
-            <View style={styles.imgcontainer}>
-                <Image source={require("../../images/welcomelogo1.png")} style={styles.img1}/>
-            </View>
-            <View style={styles.signcontainer}>
-                <Text style={styles.signtext}>Welcome Back</Text>
-            </View>
-            <View style={{marginVertical:10}}>
-                <View style={styles.usercontainer}>
-                    <Text style={styles.usertext}>Username</Text>
-                    <TextInput   keyboardType={'email-address'} style={styles.userinput}></TextInput>
-                </View>
-                <View style={styles.passcontainer}>
-                    <Text style={styles.passtext}>Password</Text>
-                    <TextInput keyboardType={'numbers-and-punctuation'} style={styles.passinput}></TextInput>
-                </View>
-                <View style={styles.forgotcontainer}>
-                    <TouchableOpacity>
-                        <Text style={styles.forgottext}>Forgot Password ?</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-            <View style={styles.btnContainer}>
-                <TouchableOpacity onPress={()=> navigation.navigate("BottomTabNavigation")} style={styles.signbtn}>
-                    <Text style={{color:'white',fontSize:20,fontWeight:'700'}}>Login</Text>
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
+const GoogleIcon = () => (
+    <View>
+        <Image
+            source={Google}
+            style={{ width: 40, height: 40, resizeMode: 'contain' }}
+        />
     </View>
-  )
-}
+);
+const AppleIcon = () => (
+    <View>
+        <Image
+            source={Apple}
+            style={{ width: 40, height: 40, resizeMode: 'contain' }}
+        />
+    </View>
+);
+const FacebookIcon = () => (
+    <View>
+        <Image
+            source={Facebook}
+            style={{ width: 40, height: 40, resizeMode: 'contain' }}
+        />
+    </View>
+);
 
-export default LoginScreen
+const LoginScreen = ({ navigation }) => {
+    // const dispatch = useDispatch();
+    const dispatch = useDispatch();
+  const user = useSelector(state => state.user);
+    const [email, setEmail] = useState(user.username || ''); 
+    const [password, setPassword] = useState(user.password || '');
+    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
+     const handleSignIn = async () => {
+        if (!email || !password) {
+            console.log("Email and password are required.");
+            return;
+        }
+
+        setIsLoading(true);
+        console.log('Attempting sign in for:', email);
+
+        try {
+            const response = await axios.post(
+                'http://3.7.81.243/projects/plie-api/public/api/login',
+                {
+                    email: email,
+                    password: password,
+                }
+            );
+
+            if (response.data.success) {
+                console.log('Login successful!', response.data);
+
+                // ✅ Save login data to Redux
+                dispatch(login({ username: email, password }));
+
+                // Navigate to EventListing
+                navigation.navigate('EventListing');
+            } else {
+                console.log('Login failed:', response.data.message || 'Invalid credentials');
+            }
+        } catch (error) {
+            console.error('Sign-in error:', error.response?.data || error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+
+    const handleSignUp = () => {
+        console.log('Navigating to Sign Up screen');
+    };
+
+    const handleForgotPassword = () => {
+        console.log('Navigating to Forgot Password screen');
+    };
+
+    return (
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <View style={styles.topSection}>
+                    <Text style={styles.appName}>Pliē</Text>
+                    <View style={styles.imagePlaceholder}>
+                        <Icon name="image" size={60} color="#999" />
+                    </View>
+                </View>
+
+                <View style={styles.bottomSection}>
+
+                    <Text style={styles.label}>Email</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="email@email.com"
+                        value={email}
+                        onChangeText={(text) => {
+                            setEmail(text);
+                            // dispatch(setUsername(text));
+                        }}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        editable={!isLoading}
+                    />
+
+                    <Text style={styles.label}>Password</Text>
+                    <View style={styles.passwordInputContainer}>
+                        <TextInput
+                            style={styles.passwordInput}
+                            placeholder="Password"
+                            value={password}
+                            onChangeText={(text) => {
+                                setPassword(text);
+                                // dispatch(setPassword(text));
+                            }}
+                            secureTextEntry={!showPassword}
+                            editable={!isLoading}
+                        />
+                        <TouchableOpacity
+                            onPress={() => setShowPassword(!showPassword)}
+                            style={styles.eyeIcon}
+                            disabled={isLoading}
+                        >
+                            <Icon
+                                name={showPassword ? 'eye-slash' : 'eye'}
+                                size={20}
+                                color="#888"
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                    <TouchableOpacity
+                        onPress={handleForgotPassword}
+                        style={styles.forgotPasswordLink}
+                        disabled={isLoading}
+                    >
+                        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.signInButton} onPress={handleSignIn} disabled={isLoading}>
+                        <Text style={styles.signInButtonText}>
+                            Sign In
+                        </Text>
+                    </TouchableOpacity>
+
+                    <View style={styles.signUpContainer}>
+                        <Text style={styles.signUpText}>Not a member? </Text>
+                        <TouchableOpacity onPress={handleSignUp} disabled={isLoading}>
+                            <Text style={styles.signUpLinkText}>Sign Up Here</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.dividerContainer}>
+                        <View style={styles.dividerLine} />
+                        <Text style={styles.dividerText}>or Sign In with:</Text>
+                        <View style={styles.dividerLine} />
+                    </View>
+
+                    <View style={styles.socialIconsContainer}>
+                        <TouchableOpacity disabled={isLoading}><GoogleIcon /></TouchableOpacity>
+                        <TouchableOpacity disabled={isLoading}><AppleIcon /></TouchableOpacity>
+                        <TouchableOpacity disabled={isLoading}><FacebookIcon /></TouchableOpacity>
+                    </View>
+                </View>
+
+                <TouchableOpacity style={styles.guestEntry} onPress={() => { }} disabled={isLoading}>
+                    <Text style={styles.guestText}>Enter as Guest</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </SafeAreaView>
+    );
+};
+
+// --- Stylesheet ---
 const styles = StyleSheet.create({
-    container:{
-        flex:1,
-        // justifyContent:'center',
-        alignItems:'center',
-        backgroundColor:'white',
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff',
     },
-    logtext:{
-        fontSize:20,
-        fontWeight:'bold',
+    scrollContent: {
+        flexGrow: 1,
     },
-    imgcontainer:{
-        // backgroundColor:'red',
-        marginVertical:25,
-        width:deviceWidth/1.03,
-        alignItems:'center',
-        
-    },
-    img1:{
-        width:deviceWidth/1.02,
-        resizeMode:'contain',
-        height:deviceHeight/3.2,
-        borderRadius:25,
-        
-    },
-    signcontainer:{
-        // width:deviceWidth/1.1,
-        margin:20,
-        display:'flex',
-        alignItems:'center',
-        // backgroundColor:'red',
-        marginTop:40
-    },
-    signtext:{
-        fontSize:32,
-        fontWeight:'500',
-        color:'#8A2BE2',
-    },
-    usercontainer:{
-        flexDirection:'column',
-        padding:5,
-        width:deviceWidth/1.07,
-        marginLeft:6,
-        // backgroundColor:'red'
-    },
-    userinput:{
-        borderWidth:1,
-        width:deviceWidth/1.1,
-        height:40,
-        paddingLeft:15,
-        borderRadius:10,
-        // borderColor:'white',
-        
-    },
-    usertext:{
-        fontSize:17,
-        marginBottom:9,
-        fontWeight:'700',
-        color:'black',
-    },
-    passcontainer:{
-        flexDirection:'column',
-        padding:5,
-        width:deviceWidth/1.07,
-        marginLeft:6,
-        // backgroundColor:'orange'
-    },
-    passinput:{
-        borderWidth:1,
-        width:deviceWidth/1.1,
-        height:40,
-        paddingLeft:15, 
-        borderRadius:10,
-        // borderColor:'white',
-    },
-    passtext:{
-        fontSize:17,
-        marginBottom:9,
-        fontWeight:'700',
-        color:'black',
-    },
-    forgotcontainer:{
-        alignItems: 'flex-end',
-        margin:5,
-        paddingRight:15,
-        // backgroundColor:'black',
 
+    topSection: {
+        height: height * 0.31,
+        backgroundColor: '#EBEBEB',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: Platform.OS === 'android' ? 30 : 0,
     },
-    forgottext:{
-        fontSize:14,
-        color:'red',
-        fontWeight:'700'
+    appName: {
+        fontSize: 48,
+        fontWeight: '300',
+        marginBottom: 20,
+        letterSpacing: 1,
     },
-    btnContainer:{
-        alignItems:'center',
-        borderRadius:15,
-        justifyContent:'center',
-        marginTop:80,
+    imagePlaceholder: {
+        width: 100,
+        height: 100,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    signbtn:{
-        backgroundColor:'#8A2BE2',
-        width:deviceWidth/1.40,
-        height:deviceHeight*0.06,
-        justifyContent:'center',
-        alignItems:'center',
-        borderRadius:20
+
+    bottomSection: {
+        paddingHorizontal: 30,
+        paddingTop: 25,
+        paddingBottom: 20,
     },
-    btn:{
-        height:80,
+    label: {
+        fontSize: 14,
+        color: '#333',
+        marginBottom: 5,
+        marginTop: 15,
     },
-    lastContainer:{
-        flexDirection:'row',
-        marginVertical:6,
+    input: {
+        height: 45,
+        borderColor: '#EBEBEB',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        backgroundColor: '#fff',
+        fontSize: 16,
     },
-    text1:{
-        fontSize:14,
-        fontWeight:'600',
-        color:'black',
+    passwordInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 45,
+        borderColor: '#EBEBEB',
+        borderWidth: 1,
+        borderRadius: 8,
+        backgroundColor: '#fff',
     },
-    text2:{
-        fontSize:14.5,
-        fontWeight:'900',
-        marginLeft:5,
-        color:'black',
+    passwordInput: {
+        flex: 1,
+        paddingHorizontal: 15,
+        fontSize: 16,
     },
-})
+    eyeIcon: {
+        padding: 10,
+    },
+    forgotPasswordLink: {
+        alignSelf: 'flex-end',
+        marginTop: 5,
+        marginBottom: 20,
+    },
+    forgotPasswordText: {
+        fontSize: 14,
+        color: '#888',
+    },
+    signInButton: {
+        backgroundColor: '#38A750',
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginBottom: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 3,
+    },
+    signInButtonText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    signUpContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginBottom: 30,
+    },
+    signUpText: {
+        fontSize: 14,
+        color: '#555',
+    },
+    signUpLinkText: {
+        fontSize: 14,
+        color: '#38A750',
+        fontWeight: 'bold',
+    },
+
+    dividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#ddd',
+    },
+    dividerText: {
+        marginHorizontal: 10,
+        fontSize: 14,
+        color: '#888',
+    },
+    socialIconsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        marginTop: 20,
+        marginBottom: 10,
+    },
+
+    guestEntry: {
+        alignSelf: 'flex-end',
+        padding: 10,
+        marginRight: 20,
+        marginBottom: Platform.OS === 'ios' ? 20 : 10,
+    },
+    guestText: {
+        fontSize: 14,
+        color: '#888',
+    },
+});
+
+export default LoginScreen;

@@ -1,39 +1,67 @@
 import * as React from 'react';
+import { Image, Text, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-// import { Ionicons } from '@expo/vector-icons';
-import Dashboard from '../Screens/Dashboard';
-import Details from '../Screens/Details';
-import Call from '../Screens/Call';
-import Audio from '../Screens/Audio';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import Upload from '../Screens/Upload';
-
+import Search from '../Screens/Search';
+import EventListing from '../Screens/EventListing';
+import Favourites from '../Screens/Favourites';
+import Profile from '../Screens/Profile';
+import searchicon from '../assets/Images/search.png';
+import hearticon from '../assets/Images/heart.png';
+import usericon from '../assets/Images/user.png';
+import Calendaricon from '../assets/Images/Calendar.png';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+const SearchIcon = () => (
+    <View>
+        <Image
+            source={searchicon}
+            style={{ width: 24, height: 24, resizeMode: 'contain' }}
+        />
+    </View>
+);
+const HeartIcon = () => (
+    <View>
+        <Image
+            source={hearticon}
+            style={{ width: 24, height: 24, resizeMode: 'contain' }}
+        />
+    </View>
+);
+const UserIcon = () => (
+    <View>
+        <Image
+            source={usericon}
+            style={{ width: 24, height: 24, resizeMode: 'contain' }}
+        />
+    </View>
+);
+const CalendarIcon = () => (
+    <View>
+        <Image
+            source={Calendaricon}
+            style={{ width: 24, height: 24, resizeMode: 'contain' }}
+        />
+    </View>
+);
 const BottomTabNavigation = () => {
   return (
-    <Tab.Navigator screenOptions={{headerShown:false,tabBarActiveTintColor: 'black',tabBarInactiveTintColor: 'gray',tabBarShowLabel:false,}} initialRouteName='Dashboard' >
+    <Tab.Navigator screenOptions={{headerShown:false,tabBarActiveTintColor: 'black',tabBarInactiveTintColor: 'gray',tabBarShowLabel:true}} initialRouteName='Events'>
 
-        <Tab.Screen name="Dashboard" component={Dashboard} options={{tabBarIcon: ({focused, color, size}) => (
-            <Icon name="space-dashboard" size={30} color={color} />
+      <Tab.Screen name="Search" component={Search} options={{tabBarIcon: ({focused, color, size}) => (
+          <SearchIcon />
+      )}} />
+        <Tab.Screen name="Events" component={EventListing} options={{tabBarIcon: ({focused, color, size}) => (
+            <CalendarIcon />
         )}} />
-        <Tab.Screen name="Details" component={Details} options={{tabBarIcon: ({focused, color, size}) => (
-            <Icon name="folder" size={30} color={color} />
+        <Tab.Screen name="Favourites" component={Favourites} options={{tabBarIcon: ({focused, color, size}) => (
+            <HeartIcon />
         )}} />
-        <Tab.Screen name="Call" component={Call} options={{tabBarIcon: ({focused, color, size}) => (
-            <Icon name="call" size={30} color={color} />
+        <Tab.Screen name="Profile" component={Profile} options={{tabBarIcon: ({focused, color, size}) => (
+            <UserIcon />
         )}} />
-        <Tab.Screen name="Audio" component={Audio} options={{tabBarIcon: ({focused, color, size}) => (
-            <Icon name="audio-file" size={30} color={color} />
-        )}} />
-         {/* <Tab.Screen name="Upload" component={Upload} options={{tabBarIcon: ({focused, color, size}) => (
-            <Icon name="audio-file" size={30} color={color} />
-        )}} /> */}
-      
-      {/* Add more screens as needed */}
     </Tab.Navigator>
     
   );
